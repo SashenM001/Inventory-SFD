@@ -1,0 +1,56 @@
+# Node modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build outputs
+dist/
+build/
+*.log
+
+# IDEs
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Java
+*.class
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Package lock files (optional - keep for reproducibility)
+# package-lock.json
+# pom.xml
+
+# Temporary files
+*.tmp
+*~
+.#*
+
+# OS
+Thumbs.db
