@@ -12,8 +12,10 @@ public class CorsConfig implements WebMvcConfigurer {
         registry.addMapping("/api/**")
                 .allowedOrigins(
                         "http://localhost:3000",
+                        "http://localhost:8080",
                         "http://localhost:8084",
-                        "http://localhost:8081")
+                        "http://localhost:8081",
+                        "https://inventory-sfd.vercel.app")
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true)

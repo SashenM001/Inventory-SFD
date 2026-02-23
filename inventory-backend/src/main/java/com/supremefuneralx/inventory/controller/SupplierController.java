@@ -11,7 +11,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/suppliers")
 @RequiredArgsConstructor
-@CrossOrigin(origins = { "http://localhost:8081", "http://localhost:3000", "http://localhost:8084" })
+@CrossOrigin(origins = { "http://localhost:8080", "http://localhost:8081", "http://localhost:3000",
+        "http://localhost:8084", "https://inventory-sfd.vercel.app" })
 public class SupplierController {
 
     private final SupplierService supplierService;
