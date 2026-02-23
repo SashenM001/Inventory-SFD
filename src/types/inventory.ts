@@ -22,6 +22,28 @@ export interface InventoryItem {
   updatedAt: Date;
 }
 
+export interface ItemIssue {
+  id: string;
+  itemId: string;
+  itemName: string;
+  quantity: number;
+  reason: string;
+  issuedTo: string;
+  notes: string;
+  issuedAt: Date;
+}
+
+export interface ItemAddition {
+  id: string;
+  itemId: string;
+  itemName: string;
+  quantity: number;
+  supplierId: string;
+  supplierName: string;
+  notes: string;
+  addedAt: Date;
+}
+
 export type StockStatus = 'in-stock' | 'low-stock' | 'out-of-stock';
 
 export const getStockStatus = (quantity: number, minQuantity: number): StockStatus => {

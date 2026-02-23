@@ -1,4 +1,4 @@
-import { Package, Users, AlertTriangle, TrendingUp } from "lucide-react";
+import { Package, Users, AlertTriangle } from "lucide-react";
 import { useInventoryStore } from "@/stores/inventoryStore";
 import { getStockStatus } from "@/types/inventory";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,15 +9,12 @@ export function DashboardStats() {
   const totalItems = items.length;
   const totalSuppliers = suppliers.length;
   const lowStockItems = items.filter(
-    (item) => getStockStatus(item.quantity, item.minQuantity) === "low-stock"
+    (item) => getStockStatus(item.quantity, item.minQuantity) === "low-stock",
   ).length;
   const outOfStockItems = items.filter(
-    (item) => getStockStatus(item.quantity, item.minQuantity) === "out-of-stock"
+    (item) =>
+      getStockStatus(item.quantity, item.minQuantity) === "out-of-stock",
   ).length;
-  const totalValue = items.reduce(
-    (sum, item) => sum + item.quantity * item.price,
-    0
-  );
 
   const stats = [
     {
@@ -40,13 +37,6 @@ export function DashboardStats() {
       description: `${lowStockItems} low, ${outOfStockItems} out of stock`,
       icon: AlertTriangle,
       iconClassName: "text-warning",
-    },
-    {
-      title: "Total Value",
-      value: `$${totalValue.toLocaleString("en-US", { minimumFractionDigits: 2 })}`,
-      description: "Current inventory value",
-      icon: TrendingUp,
-      iconClassName: "text-success",
     },
   ];
 

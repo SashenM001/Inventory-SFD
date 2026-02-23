@@ -4,7 +4,13 @@ import { useInventoryStore } from "@/stores/inventoryStore";
 import { Supplier } from "@/types/inventory";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,17 +22,26 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { AddSupplierDialog } from "./AddSupplierDialog";
+import { AddItemDialog } from "../inventory/AddItemDialog";
 
 export function SupplierList() {
   const { suppliers, deleteSupplier, items } = useInventoryStore();
   const [searchQuery, setSearchQuery] = useState("");
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [addSupplierDialogOpen, setAddSupplierDialogOpen] = useState(false);
+  const [addItemDialogOpen, setAddItemDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [supplierToDelete, setSupplierToDelete] = useState<Supplier | null>(null);
+  const [supplierToDelete, setSupplierToDelete] = useState<Supplier | null>(
+    null,
+  );
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [passwordInput, setPasswordInput] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const DELETION_PASSWORD = "112233";
 
-  const filteredSuppliers = suppliers.filter((supplier) =>
-    supplier.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    supplier.email.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredSuppliers = suppliers.filter(
+    (supplier) =>
+      supplier.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      supplier.email.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const getItemCount = (supplierId: string) => {
@@ -35,7 +50,18 @@ export function SupplierList() {
 
   const handleDeleteClick = (supplier: Supplier) => {
     setSupplierToDelete(supplier);
-    setDeleteDialogOpen(true);
+    setPasswordInput("");
+    setPasswordError("");
+    setPasswordDialogOpen(true);
+  };
+
+  const verifyPassword = () => {
+    if (passwordInput === DELETION_PASSWORD) {
+      setPasswordDialogOpen(false);
+      setDeleteDialogOpen(true);
+    } else {
+      setPasswordError("Invalid password. Please try again.");
+    }
   };
 
   const confirmDelete = () => {
@@ -49,7 +75,7 @@ export function SupplierList() {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header & Actions */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-between">
+      <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
@@ -59,10 +85,19 @@ export function SupplierList() {
             className="pl-9"
           />
         </div>
-        <Button onClick={() => setAddDialogOpen(true)} className="gap-2">
-          <Plus className="w-4 h-4" />
-          Add Supplier
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => setAddItemDialogOpen(true)} className="gap-2">
+            <Plus className="w-4 h-4" />
+            Add Item
+          </Button>
+          <Button
+            onClick={() => setAddSupplierDialogOpen(true)}
+            className="gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Add Supplier
+          </Button>
+        </div>
       </div>
 
       {/* Supplier Cards */}
@@ -104,11 +139,15 @@ export function SupplierList() {
                 </div>
                 <div className="flex items-center gap-3 text-sm">
                   <Phone className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">{supplier.phone}</span>
+                  <span className="text-muted-foreground">
+                    {supplier.phone}
+                  </span>
                 </div>
                 <div className="flex items-start gap-3 text-sm">
                   <MapPin className="w-4 h-4 text-muted-foreground mt-0.5" />
-                  <span className="text-muted-foreground">{supplier.address}</span>
+                  <span className="text-muted-foreground">
+                    {supplier.address}
+                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -117,14 +156,67 @@ export function SupplierList() {
       )}
 
       {/* Dialogs */}
-      <AddSupplierDialog open={addDialogOpen} onOpenChange={setAddDialogOpen} />
+      <AddItemDialog
+        open={addItemDialogOpen}
+        onOpenChange={setAddItemDialogOpen}
+      />
+      <AddSupplierDialog
+        open={addSupplierDialogOpen}
+        onOpenChange={setAddSupplierDialogOpen}
+      />
+      <AlertDialog
+        open={passwordDialogOpen}
+        onOpenChange={(open) => {
+          setPasswordDialogOpen(open);
+          if (!open) {
+            setPasswordError("");
+            setPasswordInput("");
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+            <AlertDialogDescription>
+              Please enter the password to proceed with deletion.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-4 py-4">
+            <Input
+              type="password"
+              placeholder="Enter password"
+              value={passwordInput}
+              onChange={(e) => setPasswordInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && verifyPassword()}
+              className={passwordError ? "border-destructive" : ""}
+              autoFocus
+            />
+            {passwordError && (
+              <div className="p-3 bg-destructive/10 border border-destructive rounded-md">
+                <p className="text-sm font-semibold text-destructive">
+                  {passwordError}
+                </p>
+              </div>
+            )}
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={verifyPassword}
+              className="bg-primary hover:bg-primary/90"
+            >
+              Verify
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Supplier</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{supplierToDelete?.name}"? Items from
-              this supplier will remain but show "Unknown" as supplier.
+              Are you sure you want to delete "{supplierToDelete?.name}"? Items
+              from this supplier will remain but show "Unknown" as supplier.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

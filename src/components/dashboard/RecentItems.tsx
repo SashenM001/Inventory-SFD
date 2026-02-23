@@ -1,7 +1,12 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Package, AlertTriangle } from "lucide-react";
+import {
+  ArrowRight,
+  TrendingUp,
+  TrendingDown,
+  ArrowUpRight,
+  ArrowDownLeft,
+} from "lucide-react";
 import { useInventoryStore } from "@/stores/inventoryStore";
-import { getStockStatus } from "@/types/inventory";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,26 +19,31 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 export function RecentItems() {
-  const { items } = useInventoryStore();
+  const { issues, additions } = useInventoryStore();
 
-  // Get the 5 most recently updated items
-  const recentItems = [...items]
-    .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
-    .slice(0, 5);
+  // Combine issues and additions, sort by date (most recent first)
+  const allTransactions = [
+    ...additions.map((add) => ({
+      ...add,
+      type: "addition" as const,
+      date: add.addedAt,
+    })),
+    ...issues.map((issue) => ({
+      ...issue,
+      type: "issue" as const,
+      date: issue.issuedAt,
+    })),
+  ]
+    .sort((a, b) => b.date.getTime() - a.date.getTime())
+    .slice(0, 8);
 
-  const getStatusBadge = (quantity: number, minQuantity: number) => {
-    const status = getStockStatus(quantity, minQuantity);
-    const statusConfig = {
-      "in-stock": { label: "In Stock", className: "bg-success/10 text-success border-success/20" },
-      "low-stock": { label: "Low Stock", className: "bg-warning/10 text-warning border-warning/20" },
-      "out-of-stock": { label: "Out of Stock", className: "bg-destructive/10 text-destructive border-destructive/20" },
-    };
-    const config = statusConfig[status];
-    return (
-      <Badge variant="outline" className={cn("text-xs", config.className)}>
-        {config.label}
-      </Badge>
-    );
+  const formatDate = (date: Date) => {
+    return new Date(date).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   return (
@@ -41,10 +51,12 @@ export function RecentItems() {
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle className="flex items-center gap-2">
-            <Package className="w-5 h-5" />
-            Recent Items
+            <TrendingUp className="w-5 h-5" />
+            Stock Transactions
           </CardTitle>
-          <CardDescription>Recently updated inventory items</CardDescription>
+          <CardDescription>
+            Recent stock in and stock out records
+          </CardDescription>
         </div>
         <Button variant="ghost" size="sm" asChild>
           <Link to="/inventory" className="gap-1">
@@ -55,20 +67,64 @@ export function RecentItems() {
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {recentItems.map((item) => (
-            <div
-              key={item.id}
-              className="flex items-center justify-between py-2 border-b border-border last:border-0"
-            >
-              <div className="flex-1 min-w-0">
-                <div className="font-medium truncate">{item.name}</div>
-                <div className="text-sm text-muted-foreground">
-                  {item.category} · {item.quantity} units
+          {allTransactions.length === 0 ? (
+            <div className="text-center py-6 text-muted-foreground">
+              No transactions yet
+            </div>
+          ) : (
+            allTransactions.map((transaction, idx) => (
+              <div
+                key={`${transaction.type}-${idx}`}
+                className="flex items-center justify-between py-2 border-b border-border last:border-0"
+              >
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  {transaction.type === "addition" ? (
+                    <ArrowUpRight className="w-4 h-4 text-success flex-shrink-0" />
+                  ) : (
+                    <ArrowDownLeft className="w-4 h-4 text-destructive flex-shrink-0" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium truncate">
+                      {transaction.itemName}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {formatDate(transaction.date)}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="text-right">
+                    <div
+                      className={cn(
+                        "font-semibold text-sm",
+                        transaction.type === "addition"
+                          ? "text-success"
+                          : "text-destructive",
+                      )}
+                    >
+                      {transaction.type === "addition" ? "+" : "-"}
+                      {transaction.quantity}
+                    </div>
+                    {transaction.type === "addition" ? (
+                      <Badge
+                        variant="outline"
+                        className="bg-success/10 text-success border-success/20 text-xs"
+                      >
+                        Add Stock
+                      </Badge>
+                    ) : (
+                      <Badge
+                        variant="outline"
+                        className="bg-destructive/10 text-destructive border-destructive/20 text-xs"
+                      >
+                        Issue Item
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               </div>
-              {getStatusBadge(item.quantity, item.minQuantity)}
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </CardContent>
     </Card>

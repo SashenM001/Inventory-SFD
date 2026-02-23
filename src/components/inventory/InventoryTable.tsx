@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Plus, Minus, Trash2, Edit, Search, Filter } from "lucide-react";
+import { Plus, Minus, Trash2, Edit, Search, LogOut } from "lucide-react";
 import { useInventoryStore } from "@/stores/inventoryStore";
 import { getStockStatus, InventoryItem } from "@/types/inventory";
+import { ITEM_CATEGORIES } from "@/constants/categories";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -14,12 +15,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -29,21 +24,25 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { AddItemDialog } from "./AddItemDialog";
+import { AddStockDialog } from "./AddStockDialog";
 import { AdjustQuantityDialog } from "./AdjustQuantityDialog";
+import { ItemIssueDialog } from "./ItemIssueDialog";
 import { cn } from "@/lib/utils";
 
 export function InventoryTable() {
   const { items, deleteItem } = useInventoryStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [addStockDialogOpen, setAddStockDialogOpen] = useState(false);
   const [adjustDialogOpen, setAdjustDialogOpen] = useState(false);
+  const [issueDialogOpen, setIssueDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<InventoryItem | null>(null);
-
-  const categories = [...new Set(items.map((item) => item.category))];
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [passwordInput, setPasswordInput] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const DELETION_PASSWORD = "112233";
 
   const filteredItems = items.filter((item) => {
     const matchesSearch =
@@ -56,7 +55,18 @@ export function InventoryTable() {
 
   const handleDeleteClick = (item: InventoryItem) => {
     setItemToDelete(item);
-    setDeleteDialogOpen(true);
+    setPasswordInput("");
+    setPasswordError("");
+    setPasswordDialogOpen(true);
+  };
+
+  const verifyPassword = () => {
+    if (passwordInput === DELETION_PASSWORD) {
+      setPasswordDialogOpen(false);
+      setDeleteDialogOpen(true);
+    } else {
+      setPasswordError("Invalid password. Please try again.");
+    }
   };
 
   const confirmDelete = () => {
@@ -75,9 +85,18 @@ export function InventoryTable() {
   const getStatusBadge = (item: InventoryItem) => {
     const status = getStockStatus(item.quantity, item.minQuantity);
     const statusConfig = {
-      "in-stock": { label: "In Stock", className: "bg-success/10 text-success border-success/20" },
-      "low-stock": { label: "Low Stock", className: "bg-warning/10 text-warning border-warning/20" },
-      "out-of-stock": { label: "Out of Stock", className: "bg-destructive/10 text-destructive border-destructive/20" },
+      "in-stock": {
+        label: "In Stock",
+        className: "bg-success/10 text-success border-success/20",
+      },
+      "low-stock": {
+        label: "Low Stock",
+        className: "bg-warning/10 text-warning border-warning/20",
+      },
+      "out-of-stock": {
+        label: "Out of Stock",
+        className: "bg-destructive/10 text-destructive border-destructive/20",
+      },
     };
     const config = statusConfig[status];
     return (
@@ -90,7 +109,7 @@ export function InventoryTable() {
   return (
     <div className="space-y-4 animate-fade-in">
       {/* Header & Actions */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-between">
+      <div className="flex flex-col gap-4">
         <div className="flex gap-3 flex-1">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -101,32 +120,50 @@ export function InventoryTable() {
               className="pl-9"
             />
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                <Filter className="w-4 h-4" />
-                {categoryFilter === "all" ? "All Categories" : categoryFilter}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="bg-popover">
-              <DropdownMenuItem onClick={() => setCategoryFilter("all")}>
-                All Categories
-              </DropdownMenuItem>
-              {categories.map((category) => (
-                <DropdownMenuItem
-                  key={category}
-                  onClick={() => setCategoryFilter(category)}
-                >
-                  {category}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
-        <Button onClick={() => setAddDialogOpen(true)} className="gap-2">
-          <Plus className="w-4 h-4" />
-          Add Item
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant={categoryFilter === "all" ? "default" : "outline"}
+            onClick={() => setCategoryFilter("all")}
+            className="rounded-full"
+          >
+            All
+          </Button>
+          {ITEM_CATEGORIES.map((category) => (
+            <Button
+              key={category}
+              variant={categoryFilter === category ? "default" : "outline"}
+              onClick={() => setCategoryFilter(category)}
+              className="rounded-full"
+            >
+              {category}
+            </Button>
+          ))}
+        </div>
+        <div className="flex gap-2 sm:justify-end">
+          <Button
+            onClick={() => {
+              setSelectedItem(null);
+              setIssueDialogOpen(true);
+            }}
+            variant="outline"
+            className="gap-2"
+          >
+            <LogOut className="w-4 h-4" />
+            Issue Item
+          </Button>
+          <Button
+            onClick={() => {
+              setSelectedItem(null);
+              setAddStockDialogOpen(true);
+            }}
+            variant="outline"
+            className="gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Add Stock
+          </Button>
+        </div>
       </div>
 
       {/* Table */}
@@ -139,15 +176,19 @@ export function InventoryTable() {
               <TableHead className="font-semibold">Category</TableHead>
               <TableHead className="font-semibold">Supplier</TableHead>
               <TableHead className="font-semibold text-right">Qty</TableHead>
-              <TableHead className="font-semibold text-right">Price</TableHead>
               <TableHead className="font-semibold">Status</TableHead>
-              <TableHead className="font-semibold text-right">Actions</TableHead>
+              <TableHead className="font-semibold text-right">
+                Actions
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredItems.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="h-24 text-center text-muted-foreground">
+                <TableCell
+                  colSpan={7}
+                  className="h-24 text-center text-muted-foreground"
+                >
                   No items found
                 </TableCell>
               </TableRow>
@@ -164,9 +205,6 @@ export function InventoryTable() {
                   </TableCell>
                   <TableCell className="text-right font-medium">
                     {item.quantity}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    ${item.price.toFixed(2)}
                   </TableCell>
                   <TableCell>{getStatusBadge(item)}</TableCell>
                   <TableCell className="text-right">
@@ -197,19 +235,74 @@ export function InventoryTable() {
       </div>
 
       {/* Dialogs */}
-      <AddItemDialog open={addDialogOpen} onOpenChange={setAddDialogOpen} />
       <AdjustQuantityDialog
         open={adjustDialogOpen}
         onOpenChange={setAdjustDialogOpen}
         item={selectedItem}
       />
+      <ItemIssueDialog
+        open={issueDialogOpen}
+        onOpenChange={setIssueDialogOpen}
+        item={selectedItem}
+      />
+      <AddStockDialog
+        open={addStockDialogOpen}
+        onOpenChange={setAddStockDialogOpen}
+        item={selectedItem}
+      />
+      <AlertDialog
+        open={passwordDialogOpen}
+        onOpenChange={(open) => {
+          setPasswordDialogOpen(open);
+          if (!open) {
+            setPasswordError("");
+            setPasswordInput("");
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+            <AlertDialogDescription>
+              Please enter the password to proceed with deletion.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-4 py-4">
+            <Input
+              type="password"
+              placeholder="Enter password"
+              value={passwordInput}
+              onChange={(e) => setPasswordInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && verifyPassword()}
+              className={passwordError ? "border-destructive" : ""}
+              autoFocus
+            />
+            {passwordError && (
+              <div className="p-3 bg-destructive/10 border border-destructive rounded-md">
+                <p className="text-sm font-semibold text-destructive">
+                  {passwordError}
+                </p>
+              </div>
+            )}
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={verifyPassword}
+              className="bg-primary hover:bg-primary/90"
+            >
+              Verify
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Item</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{itemToDelete?.name}"? This action
-              cannot be undone.
+              Are you sure you want to delete "{itemToDelete?.name}"? This
+              action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

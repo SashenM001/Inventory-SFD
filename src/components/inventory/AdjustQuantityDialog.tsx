@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Minus, Plus } from "lucide-react";
 import { useInventoryStore } from "@/stores/inventoryStore";
+import { itemsApi } from "@/services/api";
 import { InventoryItem } from "@/types/inventory";
 import {
   Dialog,
@@ -26,7 +27,8 @@ export function AdjustQuantityDialog({
   onOpenChange,
   item,
 }: AdjustQuantityDialogProps) {
-  const { adjustQuantity } = useInventoryStore();
+  const { fetchItems } = useInventoryStore();
+  const [isLoading, setIsLoading] = useState(false);
   const [adjustment, setAdjustment] = useState(0);
 
   useEffect(() => {
@@ -39,28 +41,50 @@ export function AdjustQuantityDialog({
 
   const newQuantity = Math.max(0, item.quantity + adjustment);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (adjustment !== 0) {
-      adjustQuantity(item.id, adjustment);
-      toast.success(`Quantity adjusted for ${item.name}`);
+    if (adjustment !== 0 && item) {
+      setIsLoading(true);
+      try {
+        // Call backend API to adjust quantity
+        await itemsApi.adjustQuantity(item.id, adjustment);
+
+        // Refresh items from backend
+        await fetchItems();
+
+        toast.success(`Quantity adjusted for ${item.name}`);
+      } catch (error) {
+        console.error("Error adjusting quantity:", error);
+        toast.error(
+          `Failed to adjust quantity: ${error instanceof Error ? error.message : "Unknown error"}`,
+        );
+      } finally {
+        setIsLoading(false);
+        onOpenChange(false);
+      }
     }
-    onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
-          <DialogTitle className="font-serif text-2xl">Adjust Quantity</DialogTitle>
+          <DialogTitle className="font-serif text-2xl">
+            Adjust Quantity
+          </DialogTitle>
           <DialogDescription>
-            Adjust the stock quantity for <span className="font-medium">{item.name}</span>
+            Adjust the stock quantity for{" "}
+            <span className="font-medium">{item.name}</span>
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="text-center space-y-4">
-            <div className="text-sm text-muted-foreground">Current Quantity</div>
-            <div className="text-4xl font-serif font-semibold">{item.quantity}</div>
+            <div className="text-sm text-muted-foreground">
+              Current Quantity
+            </div>
+            <div className="text-4xl font-serif font-semibold">
+              {item.quantity}
+            </div>
           </div>
 
           <div className="flex items-center justify-center gap-4">
@@ -82,7 +106,8 @@ export function AdjustQuantityDialog({
                 className="text-center text-lg font-medium w-24"
               />
               <span className="text-xs text-muted-foreground mt-1">
-                {adjustment > 0 ? "+" : ""}{adjustment}
+                {adjustment > 0 ? "+" : ""}
+                {adjustment}
               </span>
             </div>
             <Button
@@ -104,11 +129,16 @@ export function AdjustQuantityDialog({
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isLoading}
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={adjustment === 0}>
-              Update Quantity
+            <Button type="submit" disabled={isLoading || adjustment === 0}>
+              {isLoading ? "Updating..." : "Update Quantity"}
             </Button>
           </DialogFooter>
         </form>

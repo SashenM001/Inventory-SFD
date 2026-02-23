@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useInventoryStore } from "@/stores/inventoryStore";
+import { suppliersApi } from "@/services/api";
 import {
   Dialog,
   DialogContent,
@@ -19,8 +20,12 @@ interface AddSupplierDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function AddSupplierDialog({ open, onOpenChange }: AddSupplierDialogProps) {
-  const { addSupplier } = useInventoryStore();
+export function AddSupplierDialog({
+  open,
+  onOpenChange,
+}: AddSupplierDialogProps) {
+  const { fetchSuppliers } = useInventoryStore();
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -28,31 +33,47 @@ export function AddSupplierDialog({ open, onOpenChange }: AddSupplierDialogProps
     address: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    addSupplier({
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      address: formData.address,
-    });
 
-    toast.success("Supplier added successfully");
-    onOpenChange(false);
-    setFormData({
-      name: "",
-      email: "",
-      phone: "",
-      address: "",
-    });
+    setIsLoading(true);
+    try {
+      // Call backend API to create supplier
+      await suppliersApi.createSupplier({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        address: formData.address,
+      });
+
+      // Refresh suppliers from backend
+      await fetchSuppliers();
+
+      toast.success("Supplier added successfully to database");
+      onOpenChange(false);
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        address: "",
+      });
+    } catch (error) {
+      console.error("Error adding supplier:", error);
+      toast.error(
+        `Failed to add supplier: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[450px]">
         <DialogHeader>
-          <DialogTitle className="font-serif text-2xl">Add New Supplier</DialogTitle>
+          <DialogTitle className="font-serif text-2xl">
+            Add New Supplier
+          </DialogTitle>
           <DialogDescription>
             Enter the details for the new supplier.
           </DialogDescription>
@@ -111,10 +132,17 @@ export function AddSupplierDialog({ open, onOpenChange }: AddSupplierDialogProps
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isLoading}
+            >
               Cancel
             </Button>
-            <Button type="submit">Add Supplier</Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? "Adding..." : "Add Supplier"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
