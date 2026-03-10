@@ -4,7 +4,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
-ARG VITE_API_BASE_URL=https://inventory-hub-production-90e5.up.railway.app/api/v1
+ARG VITE_API_BASE_URL=https://helpful-cooperation-production-278d.up.railway.app/api/v1
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 RUN npm run build
 
