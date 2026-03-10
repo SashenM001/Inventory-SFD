@@ -2,6 +2,7 @@ package com.supremefuneralx.inventory.controller;
 
 import com.supremefuneralx.inventory.dto.ItemIssueDTO;
 import com.supremefuneralx.inventory.service.ItemIssueService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,17 +10,20 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * REST Controller for Item Issue management.
+ * All endpoints require proper input validation.
+ * CORS is configured globally in SecurityConfig.
+ */
 @RestController
 @RequestMapping("/api/v1/issues")
 @RequiredArgsConstructor
-@CrossOrigin(origins = { "http://localhost:8080", "http://localhost:8081", "http://localhost:3000",
-        "http://localhost:8084", "https://inventory-sfd.vercel.app" })
 public class ItemIssueController {
 
     private final ItemIssueService issueService;
 
     @PostMapping
-    public ResponseEntity<ItemIssueDTO> issueItem(@RequestBody ItemIssueDTO issueDTO) {
+    public ResponseEntity<ItemIssueDTO> issueItem(@Valid @RequestBody ItemIssueDTO issueDTO) {
         return ResponseEntity.status(HttpStatus.CREATED).body(issueService.issueItem(issueDTO));
     }
 

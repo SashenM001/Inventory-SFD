@@ -2,23 +2,28 @@ package com.supremefuneralx.inventory.controller;
 
 import com.supremefuneralx.inventory.dto.InventoryItemDTO;
 import com.supremefuneralx.inventory.service.InventoryItemService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
+/**
+ * REST Controller for Inventory Item management.
+ * All endpoints require proper input validation.
+ * CORS is configured globally in SecurityConfig.
+ */
 @RestController
 @RequestMapping("/api/v1/items")
 @RequiredArgsConstructor
-@CrossOrigin(origins = { "http://localhost:8080", "http://localhost:8081", "http://localhost:3000",
-        "http://localhost:8084", "https://inventory-sfd.vercel.app" })
 public class InventoryItemController {
 
     private final InventoryItemService itemService;
 
     @PostMapping
-    public ResponseEntity<InventoryItemDTO> createItem(@RequestBody InventoryItemDTO itemDTO) {
+    public ResponseEntity<InventoryItemDTO> createItem(@Valid @RequestBody InventoryItemDTO itemDTO) {
         return ResponseEntity.status(HttpStatus.CREATED).body(itemService.createItem(itemDTO));
     }
 
@@ -33,19 +38,21 @@ public class InventoryItemController {
     }
 
     @GetMapping("/category/{category}")
-    public ResponseEntity<List<InventoryItemDTO>> getItemsByCategory(@PathVariable String category) {
+    public ResponseEntity<List<InventoryItemDTO>> getItemsByCategory(
+            @PathVariable @NotBlank(message = "Category cannot be blank") String category) {
         return ResponseEntity.ok(itemService.getItemsByCategory(category));
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<InventoryItemDTO>> searchItems(@RequestParam String searchTerm) {
+    public ResponseEntity<List<InventoryItemDTO>> searchItems(
+            @RequestParam @NotBlank(message = "Search term cannot be blank") String searchTerm) {
         return ResponseEntity.ok(itemService.searchItems(searchTerm));
     }
 
     @GetMapping("/search/category")
     public ResponseEntity<List<InventoryItemDTO>> searchItemsByCategory(
-            @RequestParam String category,
-            @RequestParam String searchTerm) {
+            @RequestParam @NotBlank(message = "Category cannot be blank") String category,
+            @RequestParam @NotBlank(message = "Search term cannot be blank") String searchTerm) {
         return ResponseEntity.ok(itemService.searchItemsByCategory(category, searchTerm));
     }
 
@@ -55,7 +62,8 @@ public class InventoryItemController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<InventoryItemDTO> updateItem(@PathVariable Long id, @RequestBody InventoryItemDTO itemDTO) {
+    public ResponseEntity<InventoryItemDTO> updateItem(@PathVariable Long id,
+            @Valid @RequestBody InventoryItemDTO itemDTO) {
         return ResponseEntity.ok(itemService.updateItem(id, itemDTO));
     }
 

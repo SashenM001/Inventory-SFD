@@ -2,6 +2,7 @@ package com.supremefuneralx.inventory.controller;
 
 import com.supremefuneralx.inventory.dto.ItemAdditionDTO;
 import com.supremefuneralx.inventory.service.ItemAdditionService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,17 +10,20 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * REST Controller for Item Addition management.
+ * All endpoints require proper input validation.
+ * CORS is configured globally in SecurityConfig.
+ */
 @RestController
 @RequestMapping("/api/v1/additions")
 @RequiredArgsConstructor
-@CrossOrigin(origins = { "http://localhost:8080", "http://localhost:8081", "http://localhost:3000",
-        "http://localhost:8084", "https://inventory-sfd.vercel.app" })
 public class ItemAdditionController {
 
     private final ItemAdditionService additionService;
 
     @PostMapping
-    public ResponseEntity<ItemAdditionDTO> addItem(@RequestBody ItemAdditionDTO additionDTO) {
+    public ResponseEntity<ItemAdditionDTO> addItem(@Valid @RequestBody ItemAdditionDTO additionDTO) {
         return ResponseEntity.status(HttpStatus.CREATED).body(additionService.addItem(additionDTO));
     }
 

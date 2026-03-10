@@ -20,7 +20,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ArrowDownLeft, ArrowUpRight, Filter, Printer } from "lucide-react";
 
-type TimePeriod = "daily" | "weekly" | "monthly" | "all" | "low-stocks" | "out-of-stock";
+type TimePeriod =
+  | "daily"
+  | "weekly"
+  | "monthly"
+  | "all"
+  | "low-stocks"
+  | "out-of-stock";
 
 const SummaryPage = () => {
   const { additions, issues, items } = useInventoryStore();
@@ -63,9 +69,17 @@ const SummaryPage = () => {
 
   // Combine and sort transactions by date (most recent first)
   const combinedTransactions = [
-    ...filteredAdditions.map((add) => ({ ...add, type: "addition", date: new Date(add.addedAt) })),
-    ...filteredIssues.map((issue) => ({ ...issue, type: "issue", date: new Date(issue.issuedAt) })),
-  ].sort((a, b) => b.date.getTime() - a.date.getTime());
+    ...filteredAdditions.map((add) => ({
+      ...add,
+      type: "addition" as const,
+      date: new Date(add.addedAt),
+    })),
+    ...filteredIssues.map((issue) => ({
+      ...issue,
+      type: "issue" as const,
+      date: new Date(issue.issuedAt),
+    })),
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString("en-US", {
@@ -99,7 +113,7 @@ const SummaryPage = () => {
       .map((item) => item.name);
 
     return combinedTransactions.filter((t) =>
-      lowStockItemNames.includes(t.itemName)
+      lowStockItemNames.includes(t.itemName),
     );
   };
 
@@ -112,7 +126,7 @@ const SummaryPage = () => {
       .map((item) => item.name);
 
     return combinedTransactions.filter((t) =>
-      outOfStockItemNames.includes(t.itemName)
+      outOfStockItemNames.includes(t.itemName),
     );
   };
 
@@ -133,11 +147,7 @@ const SummaryPage = () => {
             Transaction Records
           </h2>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              className="gap-2"
-              onClick={handlePrint}
-            >
+            <Button variant="outline" className="gap-2" onClick={handlePrint}>
               <Printer className="w-4 h-4" />
               Print
             </Button>
@@ -149,17 +159,24 @@ const SummaryPage = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-popover">
-                {(["daily", "weekly", "monthly", "all", "low-stocks", "out-of-stock"] as TimePeriod[]).map(
-                  (period) => (
-                    <DropdownMenuItem
-                      key={period}
-                      onClick={() => setTimePeriod(period)}
-                      className={timePeriod === period ? "bg-muted" : ""}
-                    >
-                      {timePeriodLabels[period]}
-                    </DropdownMenuItem>
-                  ),
-                )}
+                {(
+                  [
+                    "daily",
+                    "weekly",
+                    "monthly",
+                    "all",
+                    "low-stocks",
+                    "out-of-stock",
+                  ] as TimePeriod[]
+                ).map((period) => (
+                  <DropdownMenuItem
+                    key={period}
+                    onClick={() => setTimePeriod(period)}
+                    className={timePeriod === period ? "bg-muted" : ""}
+                  >
+                    {timePeriodLabels[period]}
+                  </DropdownMenuItem>
+                ))}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -184,7 +201,7 @@ const SummaryPage = () => {
               {(() => {
                 let displayTransactions = combinedTransactions;
                 let emptyMessage = "No transactions for this period";
-                
+
                 if (timePeriod === "low-stocks") {
                   displayTransactions = getLowStockItems();
                   emptyMessage = "No low stock items";
@@ -192,7 +209,7 @@ const SummaryPage = () => {
                   displayTransactions = getOutOfStockItems();
                   emptyMessage = "No out of stock items";
                 }
-                
+
                 return displayTransactions.length === 0 ? (
                   <TableRow>
                     <TableCell

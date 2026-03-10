@@ -34,7 +34,7 @@ export function RecentItems() {
       date: issue.issuedAt,
     })),
   ]
-    .sort((a, b) => b.date.getTime() - a.date.getTime())
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 8);
 
   const formatDate = (date: Date) => {
@@ -59,7 +59,7 @@ export function RecentItems() {
           </CardDescription>
         </div>
         <Button variant="ghost" size="sm" asChild>
-          <Link to="/inventory" className="gap-1">
+          <Link to="/summary" className="gap-1">
             View all
             <ArrowRight className="w-4 h-4" />
           </Link>

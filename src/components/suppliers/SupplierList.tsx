@@ -33,10 +33,6 @@ export function SupplierList() {
   const [supplierToDelete, setSupplierToDelete] = useState<Supplier | null>(
     null,
   );
-  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
-  const [passwordInput, setPasswordInput] = useState("");
-  const [passwordError, setPasswordError] = useState("");
-  const DELETION_PASSWORD = "112233";
 
   const filteredSuppliers = suppliers.filter(
     (supplier) =>
@@ -50,18 +46,7 @@ export function SupplierList() {
 
   const handleDeleteClick = (supplier: Supplier) => {
     setSupplierToDelete(supplier);
-    setPasswordInput("");
-    setPasswordError("");
-    setPasswordDialogOpen(true);
-  };
-
-  const verifyPassword = () => {
-    if (passwordInput === DELETION_PASSWORD) {
-      setPasswordDialogOpen(false);
-      setDeleteDialogOpen(true);
-    } else {
-      setPasswordError("Invalid password. Please try again.");
-    }
+    setDeleteDialogOpen(true);
   };
 
   const confirmDelete = () => {
@@ -164,52 +149,6 @@ export function SupplierList() {
         open={addSupplierDialogOpen}
         onOpenChange={setAddSupplierDialogOpen}
       />
-      <AlertDialog
-        open={passwordDialogOpen}
-        onOpenChange={(open) => {
-          setPasswordDialogOpen(open);
-          if (!open) {
-            setPasswordError("");
-            setPasswordInput("");
-          }
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
-            <AlertDialogDescription>
-              Please enter the password to proceed with deletion.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="space-y-4 py-4">
-            <Input
-              type="password"
-              placeholder="Enter password"
-              value={passwordInput}
-              onChange={(e) => setPasswordInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && verifyPassword()}
-              className={passwordError ? "border-destructive" : ""}
-              autoFocus
-            />
-            {passwordError && (
-              <div className="p-3 bg-destructive/10 border border-destructive rounded-md">
-                <p className="text-sm font-semibold text-destructive">
-                  {passwordError}
-                </p>
-              </div>
-            )}
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={verifyPassword}
-              className="bg-primary hover:bg-primary/90"
-            >
-              Verify
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
