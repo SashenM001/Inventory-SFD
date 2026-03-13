@@ -24,43 +24,76 @@ spring.datasource.username=${MYSQL_USER:root}
 spring.datasource.password=${MYSQL_PASSWORD:Kanil12Mysql22_}
 ```
 
-### Railway MySQL Setup
+### Railway MySQL Setup (⚠️ CRITICAL: Follow These Steps Exactly)
 
-If you're deploying to Railway with MySQL:
+**⚠️ IMPORTANT:** Railway generates a unique MySQL password automatically. You MUST extract it and set it as an environment variable, or your app will get "Access denied" errors.
 
-**1. Add MySQL Plugin to Railway**
-- Go to Railway dashboard
-- Click "Add Service" → "Add from Marketplace" → "MySQL"
-- This will automatically create a MySQL database and provide credentials
+#### Step-by-Step: Get MySQL Credentials from Railway
 
-**2. Configure Environment Variables in Railway**
-After MySQL is provisioned, set these environment variables in Railway dashboard:
+**STEP 1: Go to Railway Dashboard**
+1. Open https://railway.app
+2. Select your project
+3. Look for the **MySQL service** in your project canvas
 
-```
-MYSQL_URL=jdbc:mysql://{DB_HOST}:{DB_PORT}/railway?useSSL=true&serverTimezone=UTC&allowPublicKeyRetrieval=false
-MYSQL_USER={DATABASE_USER}
-MYSQL_PASSWORD={DATABASE_PASSWORD}
-JWT_SECRET=<your-32-char-secret>
-```
+**STEP 2: View MySQL Connection Details**
+1. Click on the **MySQL box/service** in your project
+2. Go to the **"Variables"** tab (or **"Settings"** → **"Environment"**)
+3. You'll see auto-generated variables:
+   - `MYSQL_HOST` = Database hostname (e.g., `mysql.railway.internal` or IP)
+   - `MYSQL_PORT` = Port (usually `3306`)
+   - `MYSQL_DATABASE` = Database name (usually `railway`)
+   - `MYSQL_USER` = Username (usually `root`)
+   - `MYSQL_PASSWORD` = **← COPY THIS VALUE** (this is YOUR unique password)
 
-Where:
-- `{DB_HOST}` = The hostname of your MySQL service (find in Railway dashboard)
-- `{DB_PORT}` = Usually `3306`
-- `{DATABASE_USER}` = MySQL username (provided by Railway)
-- `{DATABASE_PASSWORD}` = MySQL password (provided by Railway)
-- `railway` = The default database name (or create your own)
+**IMPORTANT:** The `MYSQL_PASSWORD` Railroad generates is DIFFERENT from the local default!
 
-**3. Find Railway MySQL Credentials**
-- Go to Railway dashboard → Click on MySQL service
-- Click "Connect" → View raw connection string
-- Extract `hostname`, `port`, `username`, `password`
+**STEP 3: Set Variables in Your App Service**
+1. Go back to your **App service** (not MySQL)
+2. Click **"Variables"** tab
+3. Add these 3 variables (MUST match the values from Step 2):
 
-**Example Railway MySQL URL:**
 ```
 MYSQL_URL=jdbc:mysql://mysql.railway.internal:3306/railway?useSSL=true&serverTimezone=UTC&allowPublicKeyRetrieval=false
 MYSQL_USER=root
-MYSQL_PASSWORD=abcd1234efgh5678
+MYSQL_PASSWORD=<PASTE_THE_VALUE_YOU_COPIED_FROM_RAILWAY_MYSQL>
+JWT_SECRET=<your-32-character-secret-key>
 ```
+
+**CRITICAL:** Make sure:
+- ✅ `MYSQL_PASSWORD` matches EXACTLY what Railway MySQL generated
+- ✅ `MYSQL_USER` is `root` (or whatever Railway shows)
+- ✅ `MYSQL_URL` uses `mysql.railway.internal` (Railway's internal hostname)
+- ✅ Database name is `railway` (unless you created a different one)
+
+#### Example (REAL VALUES FROM RAILWAY)
+
+If your Railway MySQL variables show:
+```
+MYSQL_HOST = mysql.railway.internal
+MYSQL_PORT = 3306
+MYSQL_DATABASE = railway
+MYSQL_USER = root
+MYSQL_PASSWORD = AbC123xYz789defG012HiJk
+```
+
+Then set in your App service:
+```
+MYSQL_URL=jdbc:mysql://mysql.railway.internal:3306/railway?useSSL=true&serverTimezone=UTC&allowPublicKeyRetrieval=false
+MYSQL_USER=root
+MYSQL_PASSWORD=AbC123xYz789defG012HiJk
+JWT_SECRET=MySecretKey123456789012345678901
+```
+
+#### Troubleshooting "Access denied" Error
+
+**Error:** `Access denied for user 'root'@'...' (using password: YES)`
+
+**Solution:**
+1. Go to Railway MySQL service → Variables tab
+2. Copy the EXACT `MYSQL_PASSWORD` value
+3. Go to your App service → Variables tab
+4. Update `MYSQL_PASSWORD` to match exactly (character-for-character)
+5. Save and redeploy
 
 ---
 
