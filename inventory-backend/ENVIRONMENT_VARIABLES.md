@@ -19,9 +19,47 @@ This document describes all required and optional environment variables for the 
 ### Example Configuration
 
 ```properties
-spring.datasource.url=${MYSQL_URL:jdbc:mysql://localhost:3306/dbfms?useSSL=true&serverTimezone=Asia/Colombo&allowPublicKeyRetrieval=false}
+spring.datasource.url=${MYSQL_URL:jdbc:mysql://localhost:3306/dbfms?useSSL=true&serverTimezone=UTC&allowPublicKeyRetrieval=false}
 spring.datasource.username=${MYSQL_USER:root}
-spring.datasource.password=${MYSQL_PASSWORD:}
+spring.datasource.password=${MYSQL_PASSWORD:Kanil12Mysql22_}
+```
+
+### Railway MySQL Setup
+
+If you're deploying to Railway with MySQL:
+
+**1. Add MySQL Plugin to Railway**
+- Go to Railway dashboard
+- Click "Add Service" → "Add from Marketplace" → "MySQL"
+- This will automatically create a MySQL database and provide credentials
+
+**2. Configure Environment Variables in Railway**
+After MySQL is provisioned, set these environment variables in Railway dashboard:
+
+```
+MYSQL_URL=jdbc:mysql://{DB_HOST}:{DB_PORT}/railway?useSSL=true&serverTimezone=UTC&allowPublicKeyRetrieval=false
+MYSQL_USER={DATABASE_USER}
+MYSQL_PASSWORD={DATABASE_PASSWORD}
+JWT_SECRET=<your-32-char-secret>
+```
+
+Where:
+- `{DB_HOST}` = The hostname of your MySQL service (find in Railway dashboard)
+- `{DB_PORT}` = Usually `3306`
+- `{DATABASE_USER}` = MySQL username (provided by Railway)
+- `{DATABASE_PASSWORD}` = MySQL password (provided by Railway)
+- `railway` = The default database name (or create your own)
+
+**3. Find Railway MySQL Credentials**
+- Go to Railway dashboard → Click on MySQL service
+- Click "Connect" → View raw connection string
+- Extract `hostname`, `port`, `username`, `password`
+
+**Example Railway MySQL URL:**
+```
+MYSQL_URL=jdbc:mysql://mysql.railway.internal:3306/railway?useSSL=true&serverTimezone=UTC&allowPublicKeyRetrieval=false
+MYSQL_USER=root
+MYSQL_PASSWORD=abcd1234efgh5678
 ```
 
 ---
