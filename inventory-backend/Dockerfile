@@ -15,14 +15,13 @@ COPY --from=build /app/target/inventory-service.jar app.jar
 # Note: On Railway, these can be overridden by setting env vars in the Railway dashboard
 ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75 -Djava.net.preferIPv4Stack=true"
 
-# Database configuration - defaults to localhost for local development
-# On Railway, set these via environment variables:
-# MYSQL_URL=jdbc:mysql://[host]:[port]/dbfms?useSSL=true&serverTimezone=UTC&allowPublicKeyRetrieval=false
-# MYSQL_USER=[user from Railway MySQL service]
-# MYSQL_PASSWORD=[password from Railway MySQL service]
-ENV MYSQL_URL=""
-ENV MYSQL_USER=""
-ENV MYSQL_PASSWORD=""
+# Database configuration - Railway auto-injects MYSQLHOST, MYSQLPORT, etc.
+# These are empty defaults; Railway overrides them at runtime
+ENV MYSQLHOST=""
+ENV MYSQLPORT="3306"
+ENV MYSQLDATABASE="railway"
+ENV MYSQLUSER=""
+ENV MYSQLPASSWORD=""
 
 # JWT and other config
 ENV JWT_SECRET=""
