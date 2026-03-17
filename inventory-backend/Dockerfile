@@ -1,9 +1,9 @@
 # Stage 1: Build the Spring Boot app with Java 21
 FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /app
-COPY pom.xml .
+COPY inventory-backend/pom.xml .
 RUN mvn dependency:resolve
-COPY src ./src
+COPY inventory-backend/src ./src
 RUN mvn clean package -DskipTests
 
 # Stage 2: Run the app with Java 21
