@@ -9,7 +9,7 @@ RUN mvn clean package -DskipTests
 # Stage 2: Run the app with Java 21
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
-COPY --from=build /app/target/inventory-service-1.0.0.jar app.jar
+COPY --from=build /app/target/inventory-service.jar app.jar
 
 # Environment variables for configuration
 # Note: On Railway, these can be overridden by setting env vars in the Railway dashboard
@@ -29,6 +29,6 @@ ENV JWT_SECRET=""
 ENV JWT_EXPIRATION="86400000"
 ENV LOGGING_LEVEL_ROOT="INFO"
 
-EXPOSE 8082
+EXPOSE 8080
 
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar --server.port=${PORT:-8080}"]
